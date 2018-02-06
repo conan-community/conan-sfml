@@ -55,3 +55,10 @@ docs/_build/
 
 # PyBuilder
 target/
+
+
+.DS_Store
+.conan/
+.sudo_as_admin_successful
+kk
+
