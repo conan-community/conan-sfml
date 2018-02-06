@@ -21,6 +21,21 @@ class SFMLConan(ConanFile):
     def folder_name(self):
         return "SFML-%s" % self.version
 
+    def system_requirements(self):
+        if tools.os_info.linux_distro == "ubuntu":
+            tools.SystemPackageTool().update()
+            tools.SystemPackageTool().install("libx11-dev libxrandr-dev libglu1-mesa-dev libudev-dev")
+
+    def requirements(self):
+        if self.settings.os == "Linux":
+            self.requires("openal/1.18.2@conan/testing")
+        elif self.settings.os == "Macos":
+            self.requires("libjpeg/9b@bincrafters/stable")
+            self.requires("flac/1.3.2@bincrafters/stable")
+            self.requires("vorbis/1.3.5@bincrafters/stable")
+            self.requires("freetype/2.8.1@bincrafters/stable")
+            self.requires("stb/73990fe@conan/testing")
+
     def source(self):
         tools.download("https://github.com/SFML/SFML/archive/%s.zip" % self.version, "sfml.zip")
         tools.unzip("sfml.zip")
@@ -37,6 +52,14 @@ conan_basic_setup()
                                            "SFML", "Graphics", "CMakeLists.txt"),
                               "EXTERNAL_LIBS ${GRAPHICS_EXT_LIBS}",
                               "EXTERNAL_LIBS ${CONAN_LIBS}")
+
+        if self.settings.os == "Linux":  # find flac not working on ubuntu
+            path = os.path.join(self.folder_name, "src", "SFML", "Audio", "CMakeLists.txt")
+            flag_lib = self.deps_cpp_info["flac"].libs[0]
+            tools.replace_in_file(path,
+                                  "find_package(FLAC REQUIRED)",
+                                  'set(FLAC_LIBRARY "%s")' % flag_lib)
+
 
     def build(self):
         cmake = CMake(self)
